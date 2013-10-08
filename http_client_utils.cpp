@@ -11,14 +11,17 @@ std::string int2str(int n) {
 
 inline bool is_digit(char ch) {return ('0' <= ch && ch <= '9');}
 int str2int(const std::string& src) {
-	int n = 0;
 	uint32_t p = 0;
-	
-	while(!is_digit(src[p])) ++p;
+	while(
+		!is_digit(src[p])
+		&& 
+		!(src[p] == '-' && is_digit(src[p+1]))
+	) ++p;
 	bool _signed = (src[p] == '-');
+	
+	int n = 0;
 	for(p=(_signed ? ++p : p); is_digit(src[p]); ++p)
 		n = (n * 10) + (src[p] - '0');
-	
 	if(_signed) n *= -1;
 	return n;
 }
