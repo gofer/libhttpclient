@@ -13,9 +13,9 @@ inline bool is_digit(char ch) {return ('0' <= ch && ch <= '9');}
 int str2int(const std::string& src) {
 	int n = 0;
 	uint32_t p = 0;
-	bool _signed = (src[0] == '-');
 	
 	while(!is_digit(src[p])) ++p;
+	bool _signed = (src[p] == '-');
 	for(p=(_signed ? ++p : p); is_digit(src[p]); ++p)
 		n = (n * 10) + (src[p] - '0');
 	
