@@ -1,14 +1,19 @@
 #include <string>
-#include <cstdlib>
 #include <http_client.hpp>
+#include <http_client_utils.hpp>
 #include <iostream>
 
 HTTPClient::HTTPClient() {
 	_ssl_flag = false;
+	recv_status = new std::string();
+	recv_header = new HTTPHeader();
+	recv_body = new std::string();
 }
 
 HTTPClient::~HTTPClient() {
-	
+	delete recv_body;
+	delete recv_header;
+	delete recv_status;
 }
 
 int HTTPClient::splitURL(
@@ -76,7 +81,6 @@ int HTTPClient::send_and_recive(
 		while(true) {
 			uint32_t recv_size = tcp_client->recive(recv_buf, recv_buf_size);
 			if(recv_size == -1) return 1;
-			std::cout << recv_size << std::endl;
 			
 			if(recv_str->max_size() <= recv_buf_size + recv_str->length()) break;
 			recv_buf[recv_size] = '\0';
@@ -92,9 +96,25 @@ int HTTPClient::send_and_recive(
 	return 0;
 }
 
+int HTTPClient::split_header_body(std::string* _src) {
+	std::string src = NewLineCode::convert(*_src, NewLineCode::LF);
+	std::string::size_type p = src.find("\n");
+	
+	recv_status->assign( src.substr(0, p) );
+	
+	std::string::size_type q = src.find("\n\n", p+1);
+	
+	std::string* _header = new std::string();
+	_header->assign( src.substr(p+1, q-p-1) );
+	recv_header->set(*_header);
+	delete _header;
+	
+	recv_body->assign( src.substr(q+2) );
+	return 0;
+}
+
 int HTTPClient::get(
 	const std::string *url, 
-	std::string *recv_str, 
 	HTTPHeader *header
 ) {
 	std::string *ptcl = new std::string();
@@ -112,9 +132,12 @@ int HTTPClient::get(
 		"GET " + *file + " HTTP/1.1\r\n" + 
 		header->to_string() + "\r\n"
 	);
-	std::cout << *mesg << std::endl;
+	//std::cout << *mesg << std::endl;
 	
+	std::string *recv_str = new std::string();
 	send_and_recive(addr, port, mesg, recv_str);
+	split_header_body(recv_str);
+	delete recv_str;
 	
 	delete file;
 	delete addr;
@@ -123,16 +146,8 @@ int HTTPClient::get(
 	return 0;
 }
 
-std::string int2str(int n) {
-	char* _str = new char[0x100];
-	::sprintf(_str, "%u", n);
-	delete _str;
-	return std::string(_str);
-}
-
 int HTTPClient::post(
 	const std::string *url, 
-	std::string *recv_str,
 	const std::string *post, 
 	HTTPHeader *header
 ) {
@@ -153,9 +168,12 @@ int HTTPClient::post(
 		header->to_string() + "\r\n" +
 		*post
 	);
-	std::cout << *mesg << std::endl;
+	//std::cout << *mesg << std::endl;
 	
+	std::string *recv_str = new std::string();
 	send_and_recive(addr, port, mesg, recv_str);
+	split_header_body(recv_str);
+	delete recv_str;
 	
 	delete file;
 	delete addr;
@@ -163,3 +181,12 @@ int HTTPClient::post(
 	
 	return 0;
 }
+
+int HTTPClient::status_code() {
+	std::string::size_type p = recv_status->find(' ')+1;
+	std::string::size_type q = recv_status->find(' ', p+1);
+	return str2int( recv_status->substr(p, q-p) );
+}
+std::string* HTTPClient::status() {return recv_status;}
+HTTPHeader* HTTPClient::header()  {return recv_header;}
+std::string* HTTPClient::body()   {return recv_body;}

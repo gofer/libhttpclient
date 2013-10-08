@@ -7,6 +7,7 @@ void header_test1() {
 	httpHeader1.insert("hoge", "foobar");
 	httpHeader1.insert("oops!", "hogehoge");
 	std::cout << httpHeader1.to_string() << std::endl;
+	return;
 }
 
 void header_test2() {
@@ -18,38 +19,45 @@ void header_test2() {
 	std::cout << *str << std::endl;
 	delete str;
 	delete httpHeader2;
+	return;
 }
 
 void http_access_test() {
 	HTTPClient* httpClient = new HTTPClient();
+	
 	HTTPHeader* httpHeader = new HTTPHeader();
 	
 	httpHeader->insert(
 		std::string("Content-Type"), 
 		std::string("application/x-www-form-urlencoded")
 	);
+	
 	httpHeader->insert(
 		std::string("Connection"), 
 		std::string("close")
 	);
-	std::string* recv_str = new std::string();
+	
 	httpClient->get(
 		new std::string("http://www.ex-studio.info/"), 
-		recv_str, 
 		httpHeader
 	);
-	std::cout << *recv_str << std::endl;
+		
+	int status_code = httpClient->status_code();
+	std::cout << "Status code: " << status_code << std::endl;
+	if(status_code != 200) {
+		delete httpHeader;
+		delete httpClient;
+		return;
+	}
 	
-	HTTPHeader* recvHeader = new HTTPHeader();
-	recvHeader->set(*recv_str);
-	//recvHeader->print();
+	HTTPHeader* recvHeader = httpClient->header();
+	std::string* recvBody = httpClient->body();
 	std::cout << "Date is " << recvHeader->get("Date") << std::endl;
-	delete recvHeader;
-	
-	delete recv_str;
+	std::cout << "body: " << *recvBody << std::endl;
 	
 	delete httpHeader;
 	delete httpClient;
+	return;
 }
 
 int main() {

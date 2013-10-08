@@ -84,81 +84,7 @@ int HTTPHeader::get(std::string* key, std::string* val) {
 inline uint32_t min(uint32_t a, uint32_t b) {return (a<b)?a:b;}
 inline uint32_t min(uint32_t a, uint32_t b, uint32_t c) {return min(min(a, b), c);}
 
-namespace NewLineCode {
-	enum {LF=1, CR=2, CRLF=3};
-	const std::string strLF   = "\n";
-	const std::string strCR   = "\r";
-	const std::string strCRLF = "\r\n";
-	
-	int detect(const std::string  str) {
-		if(str.find(strCR)  == std::string::npos) return LF; else
-		if(str.find(strLF)  == std::string::npos) return CR; else
-		return CRLF;
-	}
-	int detect(const std::string *str) {
-		if(str->find(strCR) == std::string::npos) return LF; else
-		if(str->find(strLF) == std::string::npos) return CR; else
-		return CRLF;
-	}
-	std::string convert(std::string src, int code) {
-		int src_code = detect(src);
-		if(src_code == code) return std::string(src);
-		
-		std::string dst;
-		switch(src_code) {
-		case LF: {
-				switch(code) {
-				case CR : {
-						for(std::string::iterator itr=src.begin(); itr!=src.end(); ++itr) {
-							if(*itr == '\n')	dst.append(1, '\r');
-							else				dst.append(1, *itr);
-						}
-					} break;
-				case CRLF : {
-						for(std::string::iterator itr=src.begin(); itr!=src.end(); ++itr) {
-							if(*itr == '\n')	dst.append("\r\n", 2);
-							else				dst.append(1, *itr);
-						}
-					} break;
-				}
-			} break;
-		case CR: {
-				switch(code) {
-				case LF : {
-						for(std::string::iterator itr=src.begin(); itr!=src.end(); ++itr) {
-							if(*itr == '\r')	dst.append(1, '\n');
-							else				dst.append(1, *itr);
-						}
-					} break;
-				case CRLF : {
-						for(std::string::iterator itr=src.begin(); itr!=src.end(); ++itr) {
-							if(*itr == '\r')	dst.append("\r\n", 2);
-							else				dst.append(1, *itr);
-						}
-					} break;
-				}
-			} break;
-		case CRLF: {
-				switch(code) {
-				case LF : {
-						for(std::string::iterator itr=src.begin(); itr!=src.end(); ++itr) {
-							if(*itr != '\r') dst.append(1, *itr);
-						}
-					} break;
-				case CR : {
-						for(std::string::iterator itr=src.begin(); itr!=src.end(); ++itr) {
-							if(*itr != '\n') dst.append(1, *itr);
-						}
-					} break;
-				}
-			} break;
-		}
-		
-		return dst;
-	}
-};
-
-std::map<std::string, std::string> HTTPHeader::str_split(std::string& src) {
+std::map<std::string, std::string> HTTPHeader::str_split(const std::string& src) {
 	std::map<std::string, std::string> hash;
 	
 	uint64_t i=0, j=0, len=src.size();
@@ -182,7 +108,7 @@ std::map<std::string, std::string> HTTPHeader::str_split(std::string& src) {
 }
 
 int HTTPHeader::set(std::string src) {
-	uint32_t len = src.find_first_of("\n");
+	/*uint32_t len = src.find_first_of("\n");
 	if(len == std::string::npos) return 1;
 	src = NewLineCode::convert(src, NewLineCode::LF); 
 	src = src.erase(0, len);
@@ -190,7 +116,7 @@ int HTTPHeader::set(std::string src) {
 	len = src.find("\n\n", 0);
 	if(len == std::string::npos) return 1;
 	src = src.erase(len);
-	
+	*/
 	std::map<std::string, std::string> hash = str_split(src);
 	_header->swap(hash);
 	return 0;

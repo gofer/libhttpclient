@@ -9,20 +9,21 @@
 #include <pthread.h>
 #include <openssl/ssl.h>
 #include <tcp_client.hpp>
+#include <new_line.hpp>
 
 #define DEFAULT_HTTP_PORT    80
 #define DEFAULT_HTTPS_PORT   443
 
 typedef std::pair<std::string, std::string> HTTPHeaderLine;
 
-const std::string UserAgent("HogeAgent");
+const std::string UserAgent("TwitterTest");
 
 class HTTPHeader {
 private:
 	const std::string _delimiter = ": ";
 	const std::string _cr_lf = "\r\n";
 	std::map<std::string, std::string> *_header;
-	std::map<std::string, std::string> str_split(std::string&);
+	std::map<std::string, std::string> str_split(const std::string&);
 
 public:
 	HTTPHeader();
@@ -44,14 +45,24 @@ class HTTPClient {
 private:
 	TCPClient *_tcpClient;
 	bool _ssl_flag;
+	
+	std::string *recv_status;
+	HTTPHeader  *recv_header;
+	std::string *recv_body;
+	
 	int splitURL(const std::string*, std::string*, std::string*, std::string*, int*);
 	int send_and_recive(std::string*, int, std::string*, std::string*);
+	int split_header_body(std::string*);
 
 public:
 	HTTPClient();
 	~HTTPClient();
-	int  get(const std::string*, std::string*, HTTPHeader*);
-	int post(const std::string*, std::string*, const std::string*, HTTPHeader*);
+	int  get(const std::string*, HTTPHeader*);
+	int post(const std::string*, const std::string*, HTTPHeader*);
+	int status_code();
+	std::string* status();
+	HTTPHeader*  header();
+	std::string* body();
 };
 
 #endif
