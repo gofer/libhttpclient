@@ -21,4 +21,4 @@ This is compiled with a following command.
 
 
 ## Licence
-This codes are licensed by New BSD License.
+These codes are licensed by New BSD License.
